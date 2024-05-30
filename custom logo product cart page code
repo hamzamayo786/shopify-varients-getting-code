@@ -1,0 +1,274 @@
+------------------------html part of logo and variants----------------------------
+   <div class="wholesale-product-info">
+                                
+                                <div id="label-type-container">
+                                  <label><input type="radio" name="label-type" value="resell" checked> Resell</label>
+                                  <label><input type="radio" name="label-type" value="private-label"> Private Label</label>
+                                </div>
+                                  <div id="logo-upload" style="display: none;">
+                                      <div class="upload-container">
+                                          <label for="custom-logo" class="custom-file-upload">
+                                              Upload Logo
+                                          </label>
+                                          <span id="file-name">No file chosen</span>
+                                      </div>
+                                      <input type="file" id="custom-logo" name="properties[custom_logo]" accept="image/*">
+                                      <p>Logo Dimenstions: 150px X 150px</p>
+                                      <p>Logo Max Size: 1M</p>
+                                    </div>
+
+                              <div>
+                                  <label for="size-select">Size:</label>
+                                  <variant-selects
+                                  id="variant-selects-{{ section.id }}"
+                                  class="no-js-hidden"
+                                  data-section="{{ section.id }}"
+                                  data-url="{{ product.url }}"
+                                  {% if update_url == false %}
+                                    data-update-url="false"
+                                  {% endif %}
+                                  {{ block.shopify_attributes }}
+                                >
+                                  {% for option in product.options_with_values %}
+                                    {% if option.name == 'Size' %}
+                                      <div class="my-2">
+                                        <select
+                                          name="options[{{ option.name | escape }}]"
+                                          id="Option-{{ section.id }}-{{ forloop.index0 }}"
+                                          class="wholesaleSelect"
+                                        >
+                                          {% for value in option.values %}
+                                            <option
+                                              value="{{ value | escape }}"
+                                              {% if option.selected_value == value %}
+                                                selected="selected"
+                                              {% endif %}
+                                            >
+                                              {{ value }}
+                                            </option>
+                                          {% endfor %}
+                                        </select>
+                                      </div>
+                                    {% endif %}
+                        
+                                    <script type="application/json">
+                                      {{ product.variants | json }}
+                                    </script>
+                                  {% endfor %}
+                                </variant-selects>
+                                </div>
+                              
+                              </div>
+                             
+---------------------------liquid and shopify part-------------------------------
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const resellRadio = document.querySelector('input[name="label-type"][value="resell"]');
+  const privateLabelRadio = document.querySelector('input[name="label-type"][value="private-label"]');
+  const logoUploadDiv = document.getElementById('logo-upload');
+
+  resellRadio.addEventListener('change', function () {
+    if (resellRadio.checked) {
+      logoUploadDiv.style.display = 'none';
+    }
+  });
+
+  privateLabelRadio.addEventListener('change', function () {
+    if (privateLabelRadio.checked) {
+      logoUploadDiv.style.display = 'block';
+    }
+  });
+  // ------------------------------------------testing
+
+
+   document.querySelector('.custom-button').addEventListener('click', function(event) {
+    var selectedLabelType = document.querySelector('#label-type-container input[name="label-type"]:checked').value;
+    console.log(selectedLabelType);
+    event.preventDefault();
+
+    if (selectedLabelType === "resell") {
+      var labelTypeInput = document.createElement('input');
+      labelTypeInput.type = 'hidden';
+      labelTypeInput.name = 'properties[Label Type]';
+      labelTypeInput.value = selectedLabelType;
+
+      document.querySelector('.custom-form').appendChild(labelTypeInput);
+
+      document.querySelector('.custom-form').submit();
+    } else if (selectedLabelType === 'private-label') {
+      var fileInput = document.getElementById('custom-logo');
+      let submitButton = document.querySelector('.custom-button');
+      if (fileInput.files.length === 0) {
+        submitButton.disabled = true;
+        document.querySelector('.custom-form').submit();
+        return;
+      }
+      var file = fileInput.files[0];
+      var formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'shopify_upload');
+
+      console.log('Form Data:', formData.get('file'), formData.get('upload_preset'));
+
+      axios.post('https://api.cloudinary.com/v1_1/dq5myq8fx/image/upload', formData)
+        .then(function(response) {
+          var imageUrl = response.data.secure_url;
+          console.log(imageUrl);
+          document.getElementById('image-url').value = imageUrl;
+          submitButton.disabled = true;
+
+          document.querySelector('.custom-form').submit();
+        })
+        .catch(function(error) {
+          console.error('Error uploading the image:', error);
+        });
+    }
+  });
+//   document.querySelector('.custom-form').addEventListener('submit', function(event) {
+//   var selectedLabelType = document.querySelector('#label-type-container input[name="label-type"]:checked').value;
+//   console.log(selectedLabelType);
+//   event.preventDefault();
+
+//     if (selectedLabelType === "resell") {
+//     var labelTypeInput = document.createElement('input');
+//     labelTypeInput.type = 'hidden';
+//     labelTypeInput.name = 'properties[Label Type]';
+//     labelTypeInput.value = selectedLabelType;
+
+//     this.appendChild(labelTypeInput);
+
+//     this.submit();
+//     }
+//     if (selectedLabelType === 'private-label') {
+      
+//          // debugger;
+//     var fileInput = document.getElementById('custom-logo');
+//       let submitButton = document.querySelector('.custom-button');
+//     if (fileInput.files.length === 0) {
+//       submitButton.disabled = true;
+//       this.submit();
+//       return;
+//     }
+//     var file = fileInput.files[0];
+//     var formData = new FormData();
+//     formData.append('file', file);
+//     formData.append('upload_preset', 'shopify_upload');
+      
+//     console.log('Form Data:', formData.get('file'), formData.get('upload_preset'));
+
+//     // debugger;
+//     axios.post('https://api.cloudinary.com/v1_1/dq5myq8fx/image/upload', formData)
+//       .then(function(response) {
+//         var imageUrl = response.data.secure_url;
+//         // debugger;
+//           console.log(imageUrl);
+//         document.getElementById('image-url').value = imageUrl;
+//         submitButton.disabled = true;
+        
+//         document.querySelector('.custom-form').submit();
+//       })
+//       .catch(function(error) {
+//         console.error('Error uploading the image:', error);
+//       });
+//       // this.submit();
+//     }
+  
+    
+// });
+
+  // ----------------------- radio values in add to cart page ---------------------//
+  //   document.querySelector('.custom-form').addEventListener('submit', function(event) {
+  //   event.preventDefault(); 
+  //     // debugger;
+
+  //   var selectedLabelType = document.querySelector('#label-type-container input[name="label-type"]:checked').value;
+
+  //   var labelTypeInput = document.createElement('input');
+  //   labelTypeInput.type = 'hidden';
+  //   labelTypeInput.name = 'properties[Label Type]';
+  //   labelTypeInput.value = selectedLabelType;
+
+  //   this.appendChild(labelTypeInput);
+
+  //   this.submit();
+  // });
+
+  //   document.querySelector('.custom-form').addEventListener('submit', function(event) {
+  //   event.preventDefault(); 
+
+  //   // debugger;
+  //   var fileInput = document.getElementById('custom-logo');
+  //   if (fileInput.files.length === 0) {
+  //     this.submit();
+  //     return;
+  //   }
+  //   var file = fileInput.files[0];
+  //   var formData = new FormData();
+  //   formData.append('file', file);
+  //   formData.append('upload_preset', 'shopify_upload');
+      
+  //   console.log('Form Data:', formData.get('file'), formData.get('upload_preset'));
+
+  //   debugger;
+  //   axios.post('https://api.cloudinary.com/v1_1/dq5myq8fx/image/upload', formData)
+  //     .then(function(response) {
+  //       var imageUrl = response.data.secure_url;
+  //       debugger;
+  //         console.log(imageUrl);
+  //       document.getElementById('image-url').value = imageUrl;
+  //       // Now submit the form
+  //       document.querySelector('.custom-form').submit();
+  //     })
+  //     .catch(function(error) {
+  //       console.error('Error uploading the image:', error);
+  //     });
+  // });
+
+  
+
+});
+
+
+// ------------------------------------//
+
+document.addEventListener("DOMContentLoaded", function() {
+  const fileInput = document.getElementById('custom-logo');
+
+  fileInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
+
+    if (file) {
+      if (file.size > maxSizeInBytes) {
+        alert("The file size exceeds the maximum limit of 1MB. Please upload a smaller file.");
+        // Clear the file input to allow the user to select a different file
+        fileInput.value = '';
+        return;
+      }
+
+      const img = new Image();
+      img.onload = function() {
+        if (img.width !== 150 || img.height !== 150) {
+          alert("The image dimensions must be 150px by 150px. Please upload an image with the correct dimensions.");
+          // Clear the file input to allow the user to select a different file
+          fileInput.value = '';
+        }
+      };
+      img.onerror = function() {
+        alert("There was an error loading the image. Please upload a valid image file.");
+        // Clear the file input to allow the user to select a different file
+        fileInput.value = '';
+      };
+      img.src = URL.createObjectURL(file);
+    }
+  });
+
+   document.getElementById('custom-logo').addEventListener('change', function(event) {
+        const fileName = event.target.files[0] ? event.target.files[0].name : 'No file chosen';
+        document.getElementById('file-name').textContent = fileName;
+    });
+ 
+});
+
+// ---------------------------------------- min quanitity-------
