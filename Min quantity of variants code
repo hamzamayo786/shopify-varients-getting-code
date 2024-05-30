@@ -1,0 +1,46 @@
+ <script>
+      window.metafieldsData = {};
+      {% for variant in product.variants %}
+        window.metafieldsData[{{ variant.id }}] = {
+          min_quantity: {{ variant.metafields.custom.min_quantity.value | json }}
+        };
+      {% endfor %}
+
+      </script>
+
+---------------------------- script part ------------------------  
+
+
+<script>
+ 
+document.addEventListener('DOMContentLoaded', function() {
+  function getMetafieldData(variantId) {
+    return metafieldsData[variantId] ? metafieldsData[variantId].min_quantity : 1;
+  }
+
+  function setMinQuantity(variantId) {
+    var minQuantity = getMetafieldData(variantId);
+    var quantityInput = document.querySelector('input[name="quantity"]');
+    if (quantityInput) {
+      quantityInput.setAttribute('min', minQuantity);
+      quantityInput.value = Math.max(quantityInput.value, minQuantity);
+    }
+  }
+
+  document.querySelectorAll('[name="id"]').forEach(function(variantSelector) {
+    variantSelector.addEventListener('change', function(event) {
+      var variantId = event.target.value;
+      
+      setTimeout(function() {
+        setMinQuantity(variantId);
+      }, 500); 
+    });
+  });
+
+  var initialVariantId = document.querySelector('[name="id"]').value;
+  setMinQuantity(initialVariantId);
+});
+
+
+  
+</script>
