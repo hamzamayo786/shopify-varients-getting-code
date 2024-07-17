@@ -1,0 +1,19 @@
+//console.log('Product added to cart:', cartData);
+    		fetch(${routes.cart_url}?section_id=cart-drawer)
+    		.then((cartData) => cartData.text())
+    		.then((cartData) => {
+    			const html = new DOMParser().parseFromString(cartData, 'text/html');
+    			const selectors = ['cart-drawer'];
+    			for (const selector of selectors) {
+    				const targetElement = document.querySelector(selector);
+    				const sourceElement = html.querySelector(selector);
+    				if (targetElement && sourceElement) {
+    					targetElement.replaceWith(sourceElement);
+    				}
+    			}
+          document.querySelector('#cart-icon-bubble').click();
+              
+    		})
+    		.catch((e) => {
+    		console.error(e);
+    		});
